@@ -1,7 +1,5 @@
 # bionic-bot
 
-
-
 ## Usage:
 
 1. Setup and invite the Discord Bot to your guild.
