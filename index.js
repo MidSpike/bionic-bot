@@ -115,13 +115,13 @@ discord_bot.on('ready', () => {
 
 discord_bot.on('message', async (message) => {
     if (message.author.bot) return; // don't allow bots
-
-    if (!discord_bot_controllers.includes(message.author.id)) {
-        message.reply('You aren\'t allowed to use me!');
-        return;
-    }
     
     if (message.content.startsWith(discord_bot_command_prefix)) {
+        if (!discord_bot_controllers.includes(message.author.id)) {
+            message.reply('You aren\'t allowed to use me!');
+            return;
+        }
+
         const discord_command = getDiscordCommand(message.content);
         const command_args = getDiscordCommandArgs(message.content);
 
