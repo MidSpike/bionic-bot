@@ -31,5 +31,6 @@ temporary
 __*
 
 # Whitelisted Files
-!start_bot.bat
+!start_bot.cmd
+!start_bot_install.cmd
 !start_bot_in_wt.cmd

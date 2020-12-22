@@ -7,6 +7,6 @@
 echo "Launching the bot in Windows Terminal..."
 echo "You MUST have Windows Terminal configured to do this!"
 echo "Check the comments in this script for more information."
-echo "Use 'start_all.bat' for a non-windows-terminal experience!"
+echo "Use 'start_all.cmd' for a non-windows-terminal experience!"
 
-wt new-tab ".\start_bot.bat"
+wt new-tab ".\start_bot.cmd"

@@ -67,7 +67,7 @@ function start_mc_bot() {
         console.log('---------------------------------------------------------------------------------------------------------------');
 
         const discord_bot_chat_log_channel = discord_bot.channels.cache.get(process.env.DISCORD_BOT_CHAT_LOG_CHANNEL_ID);
-        discord_bot_chat_log_channel.send(`${json_message_text} ${combined_json_message_extra}`).catch(console.warn);
+        discord_bot_chat_log_channel?.send(`${json_message_text} ${combined_json_message_extra}`)?.catch(console.warn);
     });
 
     // log errors and kick reasons:
@@ -167,7 +167,7 @@ discord_bot.on('message', async (message) => {
                 mc_bot.chat('/tpyes');
 
                 /* reply in discord */
-                message.reply('I sent the message to the game!');
+                message.reply('I sent the command to the game!');
                 break;
             case `${discord_bot_command_prefix}chat`:
                 if (!mc_bot_is_ready) {
