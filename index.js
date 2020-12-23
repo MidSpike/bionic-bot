@@ -5,9 +5,12 @@ require('manakin').global; // colors for Console.*
 
 //---------------------------------------------------------------------------------------------------------------//
 
+const mc_accounts = require('./private/mc_accounts.json');
+
+//---------------------------------------------------------------------------------------------------------------//
+
 const Discord = require('discord.js');
 const mineflayer = require('mineflayer');
-const mineflayerViewer = require('prismarine-viewer').mineflayer;
 
 //---------------------------------------------------------------------------------------------------------------//
 
@@ -42,50 +45,62 @@ function getDiscordCommandArgs(message_content) {
 
 //---------------------------------------------------------------------------------------------------------------//
 
-let mc_bot;
-let mc_bot_is_ready = false;
-function start_mc_bot() {
-    if (mc_bot_is_ready) return;
+const mc_bots = new Discord.Collection();
 
-    mc_bot = mineflayer.createBot({
+let mc_bot_being_controlled;
+
+async function start_mc_bot(mc_account) {
+    const mc_bot = mineflayer.createBot({
         host: process.env.MC_SERVER_IP,
         port: process.env.MC_SERVER_PORT,
-        username: process.env.MC_ACCOUNT_EMAIL,
-        password: process.env.MC_ACCOUNT_PASSWORD,
+        username: mc_account.email,
+        password: mc_account.password,
         version: process.env.MC_GAME_VERSION, // optional; set to `false` for auto version
-        auth: process.env.MC_API_AUTH, // optional; by default uses mojang, if using a microsoft account, set to 'microsoft'
+        auth: mc_account.auth, // optional; by default uses mojang, if using a microsoft account, set to 'microsoft'
     });
 
-    // message events:
-    mc_bot.on('message', (json_message, position) => {
-        const json_message_text = json_message.text.replace(/\§([\w|\d]?)/gi, '');
-        const json_message_extra = json_message.extra;
-        const combined_json_message_extra = json_message_extra?.map(chat_message => chat_message.text.trim())?.join(' ') ?? '';
+    /* message events: */
+    // mc_bot.on('message', (json_message, position) => {
+    //     const json_message_text = json_message.text.replace(/\§([\w|\d]?)/gi, '');
+    //     const json_message_extra = json_message.extra;
+    //     const combined_json_message_extra = json_message_extra?.map(chat_message => chat_message.text.trim())?.join(' ') ?? '';
 
-        console.log('---------------------------------------------------------------------------------------------------------------');
-        console.log({ json_message, json_message_text, json_message_extra, combined_json_message_extra, position });
-        console.log('---------------------------------------------------------------------------------------------------------------');
+    //     console.log('---------------------------------------------------------------------------------------------------------------');
+    //     console.log({ json_message, json_message_text, json_message_extra, combined_json_message_extra, position });
+    //     console.log('---------------------------------------------------------------------------------------------------------------');
 
-        const discord_bot_chat_log_channel = discord_bot.channels.cache.get(process.env.DISCORD_BOT_CHAT_LOG_CHANNEL_ID);
-        discord_bot_chat_log_channel?.send(`${json_message_text} ${combined_json_message_extra}`)?.catch(console.warn);
-    });
+    //     const discord_bot_chat_log_channel = discord_bot.channels.cache.get(process.env.DISCORD_BOT_CHAT_LOG_CHANNEL_ID);
+    //     discord_bot_chat_log_channel?.send(`${json_message_text} ${combined_json_message_extra}`)?.catch(console.warn);
+    // });
 
-    // log errors and kick reasons:
+    /* log errors and kick reasons: */
     mc_bot.on('kicked', (reason, loggedIn) => console.warn(reason, loggedIn));
     mc_bot.on('error', (err) => console.trace(err));
 
     mc_bot.once('spawn', async () => {
-        /* start live view to watch bot's camera */
-        // mineflayerViewer(mc_bot, { port: 24003, firstPerson: true });
-
-        await Timer(1250); // 1.25 seconds
-
         console.info('---------------------------------------------------------------------------------------------------------------');
-        console.info('Minecraft Bot Is Ready!');
+        console.info(`${mc_account.username} is ready!`);
         console.info('---------------------------------------------------------------------------------------------------------------');
-
-        mc_bot_is_ready = true;
     });
+
+    mc_bot.$ = {
+        username: mc_account.username,
+    };
+
+    mc_bots.set(mc_account.username, mc_bot);
+
+    return;
+}
+
+let mc_bots_are_ready = false;
+
+async function start_all_mc_bots() {
+    for (const mc_account of mc_accounts) {
+        await start_mc_bot(mc_account);
+        await Timer(2500);
+    }
+
+    mc_bots_are_ready = true;
 }
 
 //---------------------------------------------------------------------------------------------------------------//
@@ -109,7 +124,7 @@ const discord_bot = new Discord.Client({
 
 discord_bot.on('ready', () => {
     console.info('---------------------------------------------------------------------------------------------------------------');
-    console.info('Discord Bot Logged In!');
+    console.info(`${discord_bot.user.tag} Logged in!`);
     console.info('---------------------------------------------------------------------------------------------------------------');
 });
 
@@ -127,58 +142,113 @@ discord_bot.on('message', async (message) => {
 
         switch (discord_command) {
             case `${discord_bot_command_prefix}help`:
-                message.channel.send('Available Commands: \`help\`, \`start\`, \`stop\`, \`join\`, \`tpyes\`, \`chat\`');
+                message.channel.send('Available Commands: \`help\`, \`start_all\`, \`stop_all\`, \`control\`, \`join\`, \`tpyes\`, \`chat\`');
                 break;
-            case `${discord_bot_command_prefix}start`:
-                if (mc_bot_is_ready) {
-                    message.reply('The Mincraft bot has already started!');
+            case `${discord_bot_command_prefix}start_all`:
+                if (mc_bots_are_ready) {
+                    message.reply('The Mincraft bots have already started!');
                 } else {
-                    message.reply('Starting the Mincraft bot!');
-                    start_mc_bot();
+                    message.reply('Starting the Mincraft bots!');
+                    start_all_mc_bots().then(() => {
+                        message.reply('Started all Mincraft bots!');
+                    }).catch((error) => {
+                        console.trace(error);
+                        message.reply('Something went wrong when starting all of the bots!');
+                    });
                 }
                 break;
-            case `${discord_bot_command_prefix}stop`:
+            case `${discord_bot_command_prefix}stop_all`:
                 /* reply in discord */
-                await message.reply(`I am going to stop everything now!\nWait a few seconds then do \`${discord_bot_command_prefix}start\` to start me!`);
+                await message.reply(`I am going to stop everything now!\nWait a few seconds then do \`${discord_bot_command_prefix}start_all\` to start me!`);
 
                 await Timer(1000);
 
                 /* restart bot */
                 process.exit(0);
+            case `${discord_bot_command_prefix}join_all`:
+                if (!mc_bots_are_ready) {
+                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    return;
+                }
+
+                for (const [ key , mc_bot ] of mc_bots) {
+                    /* send command to minecraft */
+                    mc_bot.chat(`${process.env.MC_JOIN_COMMAND}`);
+
+                    await Timer(1500);
+                }
+
+                /* reply in discord */
+                message.reply('I sent the commands to the game!');
+                break;
+            case `${discord_bot_command_prefix}control`:
+                if (!mc_bots_are_ready) {
+                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    return;
+                }
+
+                const mc_bot_to_lookup = command_args.join(' ').trim();
+
+                if (mc_bot_to_lookup.length > 0) {
+                    mc_bot_being_controlled = mc_bots.get(mc_bot_to_lookup) ?? mc_bot_being_controlled;
+                    if (mc_bot_being_controlled) {
+                        message.reply(`You are now controlling **${mc_bot_being_controlled.$.username}**!`);
+                    } else {
+                        message.reply(`I couldn\'t find an account by the username of **${mc_bot_to_lookup}**!\nI am currently controlling **${mc_bot_being_controlled?.$?.username ?? 'nothing'}**!`);
+                    }
+                } else {
+                    message.reply(`You are currently controlling **${mc_bot_being_controlled?.$?.username ?? 'nothing'}**\nDo \`${discord_command} UserName\` to control it!`);
+                }
+                break;
             case `${discord_bot_command_prefix}join`:
-                if (!mc_bot_is_ready) {
-                    message.reply(`The Mincraft bot needs to be started!\nDo \`${discord_bot_command_prefix}start\` to start it!`);
+                if (!mc_bots_are_ready) {
+                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    return;
+                }
+
+                if (!mc_bot_being_controlled) {
+                    message.reply(`Nothing is being controlled right now!\nDo \`${discord_bot_command_prefix}control <account_name>\` to control an account!`);
                     return;
                 }
 
                 /* send command to minecraft */
-                mc_bot.chat(`${process.env.MC_JOIN_COMMAND}`);
+                mc_bot_being_controlled.chat(`${process.env.MC_JOIN_COMMAND}`);
 
                 /* reply in discord */
                 message.reply('I sent the command to the game!');
                 break;
             case `${discord_bot_command_prefix}tpyes`:
-                if (!mc_bot_is_ready) {
-                    message.reply(`The Mincraft bot needs to be started!\nDo \`${discord_bot_command_prefix}start\` to start it!`);
+                if (!mc_bots_are_ready) {
+                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    return;
+                }
+
+                if (!mc_bot_being_controlled) {
+                    message.reply(`Nothing is being controlled right now!\nDo \`${discord_bot_command_prefix}control <account_name>\` to control an account!`);
                     return;
                 }
 
                 /* send command to minecraft */
-                mc_bot.chat('/tpyes');
+                mc_bot_being_controlled.chat('/tpyes');
 
                 /* reply in discord */
                 message.reply('I sent the command to the game!');
                 break;
             case `${discord_bot_command_prefix}chat`:
-                if (!mc_bot_is_ready) {
-                    message.reply(`The Mincraft bot needs to be started!\nDo \`${discord_bot_command_prefix}start\` to start it!`);
+                if (!mc_bots_are_ready) {
+                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    return;
+                }
+
+                if (!mc_bot_being_controlled) {
+                    message.reply(`Nothing is being controlled right now!\nDo \`${discord_bot_command_prefix}control <account_name>\` to control an account!`);
                     return;
                 }
 
                 const message_to_send_to_mc = command_args.join(' ').trim();
                 if (message_to_send_to_mc.length > 0) {
                     /* send message to minecraft */
-                    mc_bot.chat(`${message_to_send_to_mc}`);
+                    mc_bot_being_controlled.chat(`${message_to_send_to_mc}`);
 
                     /* reply in discord */
                     message.reply('I sent the message to the game!');

@@ -15,7 +15,6 @@
     "manakin": "^0.5.2",
     "mineflayer": "^2.37.1",
     "node-gyp": "^7.1.2",
-    "node-pre-gyp": "^0.17.0",
-    "prismarine-viewer": "^1.8.0"
+    "node-pre-gyp": "^0.17.0"
   }
 }
