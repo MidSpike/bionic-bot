@@ -146,11 +146,11 @@ discord_bot.on('message', async (message) => {
                 break;
             case `${discord_bot_command_prefix}start_all`:
                 if (mc_bots_are_ready) {
-                    message.reply('The Mincraft bots have already started!');
+                    message.reply('The Minecraft bots have already started!');
                 } else {
-                    message.reply('Starting the Mincraft bots!');
+                    message.reply('Starting the Minecraft bots!');
                     start_all_mc_bots().then(() => {
-                        message.reply('Started all Mincraft bots!');
+                        message.reply('Started all Minecraft bots!');
                     }).catch((error) => {
                         console.trace(error);
                         message.reply('Something went wrong when starting all of the bots!');
@@ -167,7 +167,7 @@ discord_bot.on('message', async (message) => {
                 process.exit(0);
             case `${discord_bot_command_prefix}join_all`:
                 if (!mc_bots_are_ready) {
-                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    message.reply(`The Minecraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
                     return;
                 }
 
@@ -183,7 +183,7 @@ discord_bot.on('message', async (message) => {
                 break;
             case `${discord_bot_command_prefix}control`:
                 if (!mc_bots_are_ready) {
-                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    message.reply(`The Minecraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
                     return;
                 }
 
@@ -202,7 +202,7 @@ discord_bot.on('message', async (message) => {
                 break;
             case `${discord_bot_command_prefix}join`:
                 if (!mc_bots_are_ready) {
-                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    message.reply(`The Minecraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
                     return;
                 }
 
@@ -219,7 +219,7 @@ discord_bot.on('message', async (message) => {
                 break;
             case `${discord_bot_command_prefix}tpyes`:
                 if (!mc_bots_are_ready) {
-                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    message.reply(`The Minecraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
                     return;
                 }
 
@@ -236,7 +236,7 @@ discord_bot.on('message', async (message) => {
                 break;
             case `${discord_bot_command_prefix}chat`:
                 if (!mc_bots_are_ready) {
-                    message.reply(`The Mincraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
+                    message.reply(`The Minecraft bots need to be started!\nDo \`${discord_bot_command_prefix}start_all\` to start them!`);
                     return;
                 }
 
