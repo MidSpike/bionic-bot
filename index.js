@@ -50,14 +50,16 @@ const mc_bots = new Discord.Collection();
 let mc_bot_being_controlled;
 
 async function start_mc_bot(mc_account) {
-    const mc_bot = mineflayer.createBot({
+    const mc_bot_options = {
         host: process.env.MC_SERVER_IP,
         port: process.env.MC_SERVER_PORT,
         username: mc_account.email,
         password: mc_account.password,
         version: process.env.MC_GAME_VERSION, // optional; set to `false` for auto version
         auth: mc_account.auth, // optional; by default uses mojang, if using a microsoft account, set to 'microsoft'
-    });
+    };
+
+    const mc_bot = mineflayer.createBot(mc_bot_options);
 
     /* message events: */
     // mc_bot.on('message', (json_message, position) => {
@@ -73,15 +75,36 @@ async function start_mc_bot(mc_account) {
     //     discord_bot_chat_log_channel?.send(`${json_message_text} ${combined_json_message_extra}`)?.catch(console.warn);
     // });
 
-    /* log errors and kick reasons: */
-    mc_bot.on('kicked', (reason, loggedIn) => console.warn(reason, loggedIn));
-    mc_bot.on('error', (err) => console.trace(err));
-
+    /* log spawn event: */
     mc_bot.once('spawn', async () => {
         console.info('---------------------------------------------------------------------------------------------------------------');
-        console.info(`${mc_account.username} is ready!`);
+        console.info('spawn event emitted:', mc_bot.$.username);
         console.info('---------------------------------------------------------------------------------------------------------------');
     });
+
+    /* log kick event: */
+    mc_bot.on('kicked', (reason, logged_in_when_kicked) => {
+        console.warn('---------------------------------------------------------------------------------------------------------------');
+        console.warn('kicked event emitted:', mc_bot.$.username, { reason, logged_in_when_kicked });
+        console.warn('---------------------------------------------------------------------------------------------------------------');
+    });
+
+    /* log end event: */
+    mc_bot.on('end', async () => {
+        console.warn('---------------------------------------------------------------------------------------------------------------');
+        console.warn('end event emitted:', mc_bot.$.username);
+        console.warn('---------------------------------------------------------------------------------------------------------------');
+
+        await Timer(5_000);
+
+        console.warn('---------------------------------------------------------------------------------------------------------------');
+        console.warn('This would be a rejoin attempt!', mc_bot.$.username);
+        console.warn('---------------------------------------------------------------------------------------------------------------');
+        // mc_bot.connect(mc_bot_options);
+    });
+
+    /* log errors and kick reasons: */
+    mc_bot.on('error', (err) => console.trace(err));
 
     mc_bot.$ = {
         username: mc_account.username,
