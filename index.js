@@ -24,6 +24,18 @@ function Timer(time_in_milliseconds) {
 }
 
 /**
+ * Generates a random integer in an inclusive range: min <= return_value <= max
+ * @param {Number} min 
+ * @param {Number} max 
+ * @returns {Number} 
+ */
+function random_range_inclusive(min, max) {
+    if (isNaN(min)) throw new TypeError('`min` must be a number!');
+    if (isNaN(max)) throw new TypeError('`max` must be a number!');
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
  * Parses message_content for the command used
  * @param {String} message_content 
  * @returns {String} the `discord_command` including the `command_prefix`
@@ -95,12 +107,15 @@ async function start_mc_bot(mc_account) {
         console.warn('end event emitted:', mc_bot.$.username);
         console.warn('---------------------------------------------------------------------------------------------------------------');
 
-        await Timer(5_000);
+        const random_time_amount = random_range_inclusive(1, 30);
+        await Timer((120_000) + random_time_amount); // wait >= 2 minutes
 
         console.warn('---------------------------------------------------------------------------------------------------------------');
-        console.warn('This would be a rejoin attempt!', mc_bot.$.username);
+        console.warn('This would be a rejoin attempt!', mc_bot.$.username, { random_time_amount });
         console.warn('---------------------------------------------------------------------------------------------------------------');
-        // mc_bot.connect(mc_bot_options);
+
+        /* auto re-connect to the server */
+        mc_bot.connect(mc_bot_options);
     });
 
     /* log errors and kick reasons: */
@@ -120,7 +135,7 @@ let mc_bots_are_ready = false;
 async function start_all_mc_bots() {
     for (const mc_account of mc_accounts) {
         await start_mc_bot(mc_account);
-        await Timer(2500);
+        await Timer(2_500); // wait 2.5 seconds
     }
 
     mc_bots_are_ready = true;
@@ -184,7 +199,7 @@ discord_bot.on('message', async (message) => {
                 /* reply in discord */
                 await message.reply(`I am going to stop everything now!\nWait a few seconds then do \`${discord_bot_command_prefix}start_all\` to start me!`);
 
-                await Timer(1000);
+                await Timer(1_000); // wait 1 second
 
                 /* restart bot */
                 process.exit(0);
@@ -198,11 +213,11 @@ discord_bot.on('message', async (message) => {
                     /* send command to minecraft */
                     mc_bot.chat(`${process.env.MC_JOIN_COMMAND}`);
 
-                    await Timer(1500);
+                    await Timer(2_500); // wait 2.5 seconds
                 }
 
                 /* reply in discord */
-                message.reply('I sent the commands to the game!');
+                message.reply('I sent the join commands to the game!');
                 break;
             case `${discord_bot_command_prefix}control`:
                 if (!mc_bots_are_ready) {
@@ -238,7 +253,7 @@ discord_bot.on('message', async (message) => {
                 mc_bot_being_controlled.chat(`${process.env.MC_JOIN_COMMAND}`);
 
                 /* reply in discord */
-                message.reply('I sent the command to the game!');
+                message.reply('I sent the join command to the game!');
                 break;
             case `${discord_bot_command_prefix}tpyes`:
                 if (!mc_bots_are_ready) {
