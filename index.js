@@ -108,7 +108,7 @@ async function start_mc_bot(mc_account) {
         console.warn('---------------------------------------------------------------------------------------------------------------');
 
         const random_time_amount = random_range_inclusive(1, 30);
-        await Timer((120_000) + random_time_amount); // wait >= 2 minutes
+        await Timer((5 * 60_000) + random_time_amount); // wait >= 5 minutes
 
         console.warn('---------------------------------------------------------------------------------------------------------------');
         console.warn('This would be a rejoin attempt!', mc_bot.$.username, { random_time_amount });
