@@ -241,7 +241,11 @@ discord_bot.on('message', async (message) => {
                         message.reply(`I couldn\'t find an account by the username of **${mc_bot_to_lookup}**!\nI am currently controlling **${mc_bot_being_controlled?.$?.username ?? 'nothing'}**!`);
                     }
                 } else {
-                    message.reply(`You are currently controlling **${mc_bot_being_controlled?.$?.username ?? 'nothing'}**\nDo \`${discord_command} UserName\` to control it!`);
+                    message.reply([
+                        `You are currently controlling **${mc_bot_being_controlled?.$?.username ?? 'nothing'}**`,
+                        `Do \`${discord_command} <account_name>\` to control an account!`,
+                        `I can control the following accounts:\n>>> ${Array.from(mc_bots.keys()).join('\n')}`,
+                    ].join('\n'));
                 }
                 break;
             case `${discord_bot_command_prefix}join`:
