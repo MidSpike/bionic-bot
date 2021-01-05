@@ -107,25 +107,32 @@ async function start_mc_bot(mc_account) {
         console.warn('end event emitted:', mc_bot.$.username);
         console.warn('---------------------------------------------------------------------------------------------------------------');
 
-        await Timer((5 * 60_000) + random_range_inclusive(1, 30_000)); // wait >= 5 minutes
-
         /* auto re-connect to the server */
-        console.warn('---------------------------------------------------------------------------------------------------------------');
-        console.warn('This would be a re-connect attempt!', mc_bot.$.username);
-        console.warn('---------------------------------------------------------------------------------------------------------------');
-        mc_bot.connect(mc_bot_options);
+        if (process.env.AUTO_RECONNECT === 'enabled') {
+            await Timer((5 * 60_000) + random_range_inclusive(1, 60_000)); // wait >= 5 minutes
 
-        await Timer((1 * 5_000) + random_range_inclusive(1, 15_000)); // wait >= 5 seconds
+            console.warn('---------------------------------------------------------------------------------------------------------------');
+            console.warn('This would be a re-connect attempt!', mc_bot.$.username);
+            console.warn('---------------------------------------------------------------------------------------------------------------');
+            mc_bot.connect(mc_bot_options);
 
-        /* auto re-join */
-        console.warn('---------------------------------------------------------------------------------------------------------------');
-        console.warn('This would be a re-join attempt!', mc_bot.$.username);
-        console.warn('---------------------------------------------------------------------------------------------------------------');
-        mc_bot.chat(`${process.env.MC_JOIN_COMMAND}`);
+            /* auto re-join */
+            if (process.env.AUTO_REJOIN === 'enabled') {
+                await Timer((1 * 20_000) + random_range_inclusive(1, 30_000)); // wait >= 20 seconds
+
+                console.warn('---------------------------------------------------------------------------------------------------------------');
+                console.warn('This would be a re-join attempt!', mc_bot.$.username);
+                console.warn('---------------------------------------------------------------------------------------------------------------');
+                mc_bot.chat(`${process.env.MC_JOIN_COMMAND}`);
+            }
+        }
     });
 
     /* log errors and kick reasons: */
-    mc_bot.on('error', (err) => console.trace(err));
+    mc_bot.on('error', (err) => {
+        console.trace(err);
+        process.exit(0);
+    });
 
     mc_bot.$ = {
         username: mc_account.username,
